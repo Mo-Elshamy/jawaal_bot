@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+  Jawbot Autonomous Mobile Robot (AMR) - URDF Configuration
+-->
+<robot name="jawbot">
+
+  <!-- ============================================================================= -->
+  <!-- GLOBAL COLOR PALETTE                                                          -->
+  <!-- ============================================================================= -->
+  <material name="white">
+    <color rgba="1.0 1.0 1.0 1.0" />
+  </material>
+
+  <material name="grey">
+    <color rgba="0.6 0.6 0.6 1.0" />
+  </material>
+
+  <material name="red">
+    <color rgba="0.8 0.1 0.1 1.0" />
+  </material>
+
+  <material name="black">
+    <color rgba="0.0 0.0 0.0 1.0" />
+  </material>
+
+
+  <!-- ============================================================================= -->
+  <!-- DUMMY ROOT LINK: Eliminates KDL root inertia warnings                        -->
+  <!-- ============================================================================= -->
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="base_link" />
+    <!-- Elevates base_link above ground level to align with wheel axes -->
+    <origin xyz="0 0 0.060292" rpy="0 0 0" />
+  </joint>
+
+
+  <!-- ============================================================================= -->
+  <!-- ROBOT CHASSIS (BASE LINK)                                                     -->
+  <!-- ============================================================================= -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.00027838 0.00024581 -0.013572" rpy="0 0 0" />
+      <mass value="0.51707" />
+      <inertia ixx="0.0010682" ixy="-1.8529E-07" ixz="8.343E-08" iyy="0.0011009" iyz="-2.7461E-07" izz="0.0021554" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/base_link.STL" />
+      </geometry>
+      <!-- Defined inline to bypass RViz rendering limitations -->
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!-- ============================================================================= -->
+  <!-- LEFT TRACTION WHEEL                                                           -->
+  <!-- ============================================================================= -->
+  <link name="left_wheel_link">
+    <inertial>
+      <origin xyz="-3.7201E-08 -0.0056934 4.4552E-08" rpy="0 0 0" />
+      <mass value="0.033874" />
+      <inertia ixx="1.2633E-05" ixy="5.4997E-12" ixz="2.0409E-10" iyy="2.3297E-05" iyz="-3.9859E-12" izz="1.2634E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/left_wheel_link.STL" />
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/left_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <origin xyz="-0.00079275 0.0925 -0.060292" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="left_wheel_link" />
+    <axis xyz="0 -1 0" />
+  </joint>
+
+
+  <!-- ============================================================================= -->
+  <!-- RIGHT TRACTION WHEEL                                                          -->
+  <!-- ============================================================================= -->
+  <link name="right_wheel_link">
+    <inertial>
+      <origin xyz="-3.0238E-09 0.0068146 -5.7962E-08" rpy="0 0 0" />
+      <mass value="0.033874" />
+      <inertia ixx="1.2633E-05" ixy="-2.0076E-12" ixz="-5.7414E-10" iyy="2.3297E-05" iyz="-6.4887E-12" izz="1.2633E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/right_wheel_link.STL" />
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/right_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <origin xyz="-0.00079275 -0.095321 -0.060292" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="right_wheel_link" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+
+  <!-- ============================================================================= -->
+  <!-- FRONT CASTER ASSEMBLY                                                        -->
+  <!-- ============================================================================= -->
+  <link name="caster_front_link">
+    <inertial>
+      <origin xyz="-0.0033534 0.00028383 -0.0012173" rpy="0 0 0" />
+      <mass value="0.0048487" />
+      <inertia ixx="4.8663E-07" ixy="6.9734E-13" ixz="-4.0889E-08" iyy="4.5501E-07" iyz="-8.246E-13" izz="7.829E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_front_link.STL" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.6 0.6 0.6 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_front_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="caster_front_joint" type="continuous">
+    <origin xyz="0.079207 -0.00085033 -0.063942" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="caster_front_link" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- Front Caster Wheel -->
+  <link name="caster_front_wheel_link">
+    <inertial>
+      <origin xyz="0 -1.1102E-16 0" rpy="0 0 0" />
+      <mass value="0.010151" />
+      <inertia ixx="7.6476E-07" ixy="5.6938E-22" ixz="7.0301E-42" iyy="1.1586E-06" iyz="6.5843E-38" izz="7.6476E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_front_wheel_link.STL" />
+      </geometry>
+      <material name="red">
+        <color rgba="0.8 0.1 0.1 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_front_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="caster_front_wheel_joint" type="continuous">
+    <origin xyz="-0.0135 0.0002 -0.0166" rpy="0 0 0" />
+    <parent link="caster_front_link" />
+    <child link="caster_front_wheel_link" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+
+  <!-- ============================================================================= -->
+  <!-- BACK CASTER ASSEMBLY                                                         -->
+  <!-- ============================================================================= -->
+  <link name="caster_back_link">
+    <inertial>
+      <origin xyz="-0.0033534 0.00028383 -0.0012173" rpy="0 0 0" />
+      <mass value="0.0048487" />
+      <inertia ixx="4.8663E-07" ixy="6.9734E-13" ixz="-4.0889E-08" iyy="4.5501E-07" iyz="-8.246E-13" izz="7.829E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_back_link.STL" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.6 0.6 0.6 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_back_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="caster_back_joint" type="continuous">
+    <origin xyz="-0.080793 -0.00085033 -0.063942" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="caster_back_link" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- Back Caster Wheel -->
+  <link name="caster_back_wheel_link">
+    <inertial>
+      <origin xyz="0 -1.1102E-16 -1.1102E-16" rpy="0 0 0" />
+      <mass value="0.010151" />
+      <inertia ixx="7.6476E-07" ixy="2.9657E-21" ixz="7.0301E-42" iyy="1.1586E-06" iyz="-7.0484E-36" izz="7.6476E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_back_wheel_link.STL" />
+      </geometry>
+      <material name="red">
+        <color rgba="0.8 0.1 0.1 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/caster_back_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="caster_back_wheel_joint" type="continuous">
+    <origin xyz="-0.0135 0.0002 -0.0166" rpy="0 0 0" />
+    <parent link="caster_back_link" />
+    <child link="caster_back_wheel_link" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+
+  <!-- ============================================================================= -->
+  <!-- LiDAR SENSOR                                                                  -->
+  <!-- ============================================================================= -->
+  <link name="lidar_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/lidar_link.STL" />
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://jawbot_description/meshes/lidar_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <origin xyz="-0.0048872 0.000614 0.10238" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="lidar_link" />
+    <axis xyz="0 0 0" />
+  </joint>
+
+</robot>
