@@ -67,7 +67,7 @@ def generate_launch_description():
     )
     
     # RViz2 Visualization node with cleanly separated argument flags
-    rviz_config_path = os.path.join(pkg_project_description, 'rviz', 'jawbot.rviz')
+    rviz_config_path = os.path.join(pkg_project_description, 'rviz', 'rviz.rviz')
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
