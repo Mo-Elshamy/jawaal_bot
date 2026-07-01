@@ -21,6 +21,9 @@ const float TICKS_PER_RAD = TICKS_PER_REV / (2.0f * PI);
 const float LOOP_HZ = 50.0f;
 const float LOOP_DT = 1.0f / LOOP_HZ;
 
+const int STATUS_LED = LED_BUILTIN; 
+const uint32_t WATCHDOG_TIMEOUT_MS = 1000;
+
 // --- 4. OBJECT INSTANTIATIONS ---
 RobotJoint left_joint(left_motor, left_enc, PIDController(15.0, 5.0, 0.5, -100.0, 100.0));
 RobotJoint right_joint(right_motor, right_enc, PIDController(15.0, 5.0, 0.5, -100.0, 100.0));
@@ -40,6 +43,7 @@ bool timer_callback(struct repeating_timer *t) {
 void setup() {
     Serial.begin(115200);
     
+    pinMode(STATUS_LED, OUTPUT);
     left_joint.init();
     right_joint.init();
 
@@ -62,4 +66,22 @@ void loop() {
 
     // 2. BACKGROUND COMMUNICATION LAYER
     ros2_comms.processIncoming();
+
+    // 3. WATCHDOG LED STATUS LAYER
+    uint32_t current_time = millis();
+    if (current_time - ros2_comms.getLastCommandTime() > WATCHDOG_TIMEOUT_MS) {
+        // DISCONNECTED: Safety override to stop motors if ROS 2 crashes
+        left_joint.setTargetVelocity(0.0);
+        right_joint.setTargetVelocity(0.0);
+
+        // Blink LED at 2Hz (toggle every 250ms) using math, not blocking delays
+        if ((current_time / 250) % 2 == 0) {
+            digitalWrite(STATUS_LED, HIGH);
+        } else {
+            digitalWrite(STATUS_LED, LOW);
+        }
+    } else {
+        // CONNECTED: Solid Light
+        digitalWrite(STATUS_LED, HIGH);
+    }
 }

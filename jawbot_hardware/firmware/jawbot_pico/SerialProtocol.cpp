@@ -1,7 +1,7 @@
 #include "SerialProtocol.h"
 
 SerialProtocol::SerialProtocol(RobotJoint& left_joint, RobotJoint& right_joint)
-    : left_joint_(left_joint), right_joint_(right_joint), input_buffer_("") {}
+    : left_joint_(left_joint), right_joint_(right_joint), input_buffer_(""), last_command_time_(0) {}
 
 void SerialProtocol::processIncoming() {
     while (Serial.available() > 0) {
@@ -18,6 +18,7 @@ void SerialProtocol::processIncoming() {
 void SerialProtocol::parseCommand(String command) {
     if (command.length() == 0) return;
     
+    last_command_time_ = millis();
     char type = command.charAt(0);
     String payload = command.substring(2);
 
@@ -45,4 +46,8 @@ void SerialProtocol::sendTelemetry(uint32_t time_micros) {
     Serial.print(" t ");
     Serial.print(time_micros);
     Serial.print("\n");
+}
+
+uint32_t SerialProtocol::getLastCommandTime() const {
+    return last_command_time_;
 }

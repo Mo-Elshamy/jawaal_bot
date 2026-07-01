@@ -1,0 +1,37 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50  # Must match the 50Hz loop we coded on your Pi Pico!
+    use_sim_time: false
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    jawbot_base_controller:
+      type: diff_drive_controller/DiffDriveController
+
+jawbot_base_controller:
+  ros__parameters:
+    left_wheel_names: ["left_wheel_joint"]
+    right_wheel_names: ["right_wheel_joint"]
+
+    # --- PHYSICAL ROBOT DIMENSIONS ---
+    # You MUST measure these on your physical Jawbot in meters!
+    wheel_separation: 0.25  # Distance between the center of the left and right wheel
+    wheel_radius: 0.035     # Radius of the wheels
+
+    # --- KINEMATIC LIMITS ---
+    use_stamped_vel: false
+    base_frame_id: base_footprint
+
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 1.0     # m/s
+        has_acceleration_limits: true
+        max_acceleration: 1.0 # m/s^2
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 2.0     # rad/s
+        has_acceleration_limits: true
+        max_acceleration: 2.0 # rad/s^2

@@ -1,0 +1,9 @@
+<library path="jawbot_hardware">
+  <class name="jawbot_hardware/JawbotHardwareInterface"
+         type="jawbot_hardware::JawbotHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      The custom ROS 2 C++ Serial Hardware Wrapper for Jawbot's Raspberry Pi Pico.
+    </description>
+  </class>
+</library>

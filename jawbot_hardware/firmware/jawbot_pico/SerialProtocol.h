@@ -9,6 +9,7 @@ private:
     RobotJoint& left_joint_;
     RobotJoint& right_joint_;
     String input_buffer_;
+    uint32_t last_command_time_;
 
     // Internal method to decode the strings
     void parseCommand(String command);
@@ -22,6 +23,8 @@ public:
 
     // Packages and fires the encoder data upstream
     void sendTelemetry(uint32_t time_micros);
+
+    uint32_t getLastCommandTime() const;
 };
 
 #endif

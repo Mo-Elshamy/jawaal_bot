@@ -2,7 +2,11 @@
 <!-- 
   Jawbot Autonomous Mobile Robot (AMR) - URDF Configuration
 -->
-<robot name="jawbot">
+
+<robot name="jawbot"
+  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="jawbot_ros2_control.urdf.xacro" />
 
   <!-- ============================================================================= -->
   <!-- GLOBAL COLOR PALETTE                                                          -->
