@@ -48,56 +48,119 @@ The project is divided into several focused ROS 2 packages:
 - Raspberry Pi Pico (flashed with `jawbot_pico` firmware)
 - USB Serial connection to the Pico (e.g., `/dev/ttyACM0`)
 
-## 6. Installation & Build Instructions
+## 6. Simulation Deployment Guide
 
-1. **Source ROS 2:**
-   ```bash
-   source /opt/ros/jazzy/setup.bash
-   ```
+This section outlines how to set up, build, and run the robot in a simulated Gazebo environment on your local development machine.
 
-2. **Clone the Repository:**
-   ```bash
-   mkdir -p ~/test_ws/src
-   cd ~/test_ws/src
-   # Clone the jawbot repository here
-   ```
-
-3. **Install Dependencies:**
-   ```bash
-   cd ~/test_ws
-   rosdep install --from-paths src --ignore-src -r -y
-   ```
-
-4. **Build the Workspace:**
-   ```bash
-   colcon build --symlink-install
-   ```
-
-5. **Source the Workspace:**
-   ```bash
-   source install/setup.bash
-   ```
-
-## 7. Usage & Quick Start
-
-### Simulation Mode (Gazebo)
-To test the robot in a simulated environment without physical hardware:
+### Step 1: Set Up Workspace & Clone Packages
 ```bash
+mkdir -p ~/test_ws/src
+cd ~/test_ws/src
+# Clone the jawbot repository here
+```
+
+### Step 2: Install Dependencies
+```bash
+cd ~/test_ws
+source /opt/ros/jazzy/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+### Step 3: Compile the Workspace
+```bash
+colcon build --symlink-install
+```
+
+### Step 4: Sourcing and Running the Simulation
+```bash
+source install/setup.bash
 ros2 launch jawbot_gazebo gazebo.launch.py
 ```
 
-### Hardware Mode (Real Robot)
-*Ensure your Pi Pico is plugged in and recognized as `/dev/ttyACM0` (or update the `port` argument).*
+### Teleoperation
+To drive the robot in the simulation, open a new terminal and run:
 ```bash
-ros2 launch jawbot_bringup real_bringup.launch.py port:=/dev/ttyACM0
+source /opt/ros/jazzy/setup.bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+## 7. Real Hardware Deployment Guide (Wireless / Pi Mode)
+
+This section outlines how to deploy, compile, and run the production robotics stack directly on the robot's onboard Single Board Computer (SBC) over a wireless network link.
+
+### Prerequisites
+* The SBC must be powered, connected to the same local Wi-Fi subnet as your development laptop, and have SSH enabled.
+* The low-level microcontroller (e.g., Pi Pico, ESP32) must be physically attached to the SBC via a USB data cable.
+* ROS 2 must already be natively installed on the SBC operating system.
+
+---
+
+### Step 1: Establish Remote Connection (SSH)
+Open a terminal window on your laptop and log into the robot’s wireless terminal interface. Replace `<username>` and `<hostname>` with your robot's configured credentials:
+
+```bash
+ssh <username>@<hostname>.local
+# (Alternatively, connect using the robot's direct IP address: ssh <username>@<ip_address>)
+```
+
+### Step 2: Set Up Workspace & Clone Packages
+Create a dedicated developer workspace, navigate to its source folder, and pull down your robot controller repositories:
+
+```bash
+# Create the workspace directory structure
+mkdir -p ~/robot_ws/src
+cd ~/robot_ws/src
+
+# Clone your robot code repositories
+git clone <your_repository_git_url> .
+```
+
+### Step 3: Configure Hardware Access Permissions
+Linux secures hardware serial lines by default. Grant your user account permanent permission to read and write data over the physical USB serial port interfaces:
+
+```bash
+# Add the active user to the dialout hardware communication group
+sudo usermod -aG dialout $USER
+
+# Force-apply the group updates without requiring a system reboot
+newgrp dialout
+# (Verify your microcontroller is registered by running ls /dev/ttyACM* or ls /dev/ttyUSB*)
+```
+
+### Step 4: Resolve Dependencies Automatically
+Scan the cloned repository package definitions (`package.xml`) and pull down any missing drivers, middleware, or operational plugins required by the hardware control loops:
+
+```bash
+cd ~/robot_ws
+sudo apt update
+rosdep update
+rosdep install --from-paths src --ignore-src -y --rosdistro $ROS_DISTRO
+```
+
+### Step 5: Compile the Workspace
+Compile the package nodes and hardware interface plugins directly on the single-board computer architecture. We use symbolic link maps to allow modification of launch and config files without re-building:
+
+```bash
+cd ~/robot_ws
+colcon build --symlink-install
+```
+
+### Step 6: Sourcing and Running the Robot Bringup
+Load the freshly compiled package targets into your environment variables and execute the master real-hardware orchestrator launch file:
+
+```bash
+# Source the workspace setup profile
+source install/setup.bash
+
+# Run the master bringup launch file
+ros2 launch <your_bringup_package_name> <your_real_bringup_launch_file>.launch.py
 ```
 
 ### Teleoperation
-Once the robot (simulated or real) is running, open a new terminal and run:
+Once the robot is running, you can teleoperate it from a new SSH terminal or a connected laptop (provided `ROS_DOMAIN_ID` is set correctly):
 ```bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
-Use the keyboard to send velocity commands to the `diff_drive_controller`.
 
 ## 8. License & Acknowledgments
 - **License:** MIT License
