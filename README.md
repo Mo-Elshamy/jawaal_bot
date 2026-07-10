@@ -101,9 +101,11 @@ Open a terminal window on your laptop and log into the robot’s wireless termin
 ```bash
 ssh <username>@<hostname>.local
 # (Alternatively, connect using the robot's direct IP address: ssh <username>@<ip_address>)
+
 ```
 
 ### Step 2: Set Up Workspace & Clone Packages
+
 Create a dedicated developer workspace, navigate to its source folder, and pull down your robot controller repositories:
 
 ```bash
@@ -113,9 +115,11 @@ cd ~/robot_ws/src
 
 # Clone your robot code repositories
 git clone <your_repository_git_url> .
+
 ```
 
 ### Step 3: Configure Hardware Access Permissions
+
 Linux secures hardware serial lines by default. Grant your user account permanent permission to read and write data over the physical USB serial port interfaces:
 
 ```bash
@@ -125,9 +129,11 @@ sudo usermod -aG dialout $USER
 # Force-apply the group updates without requiring a system reboot
 newgrp dialout
 # (Verify your microcontroller is registered by running ls /dev/ttyACM* or ls /dev/ttyUSB*)
+
 ```
 
 ### Step 4: Resolve Dependencies Automatically
+
 Scan the cloned repository package definitions (`package.xml`) and pull down any missing drivers, middleware, or operational plugins required by the hardware control loops:
 
 ```bash
@@ -135,17 +141,21 @@ cd ~/robot_ws
 sudo apt update
 rosdep update
 rosdep install --from-paths src --ignore-src -y --rosdistro $ROS_DISTRO
+
 ```
 
 ### Step 5: Compile the Workspace
+
 Compile the package nodes and hardware interface plugins directly on the single-board computer architecture. We use symbolic link maps to allow modification of launch and config files without re-building:
 
 ```bash
 cd ~/robot_ws
 colcon build --symlink-install
+
 ```
 
 ### Step 6: Sourcing and Running the Robot Bringup
+
 Load the freshly compiled package targets into your environment variables and execute the master real-hardware orchestrator launch file:
 
 ```bash
@@ -153,14 +163,48 @@ Load the freshly compiled package targets into your environment variables and ex
 source install/setup.bash
 
 # Run the master bringup launch file
-ros2 launch <your_bringup_package_name> <your_real_bringup_launch_file>.launch.py
+ros2 launch jawbot_bringup real_bringup.launch.py
+
 ```
 
 ### Teleoperation
+
 Once the robot is running, you can teleoperate it from a new SSH terminal or a connected laptop (provided `ROS_DOMAIN_ID` is set correctly):
+
 ```bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
 ```
+
+### Step 7: Dynamic PID Controller Tuning
+
+To achieve smooth and accurate movements, Jawbot utilizes an embedded C++ node to dynamically tune the Pi Pico's motor PID loops mid-flight.
+
+**1. Launch the Visualization Tools:**
+On your local development laptop, run the dynamic parameter GUI and the real-time plotter tool:
+
+```bash
+# Terminal 1: Open the parameter sliders
+ros2 run rqt_reconfigure rqt_reconfigure
+
+# Terminal 2: Open the velocity plotter
+ros2 run rqt_plot rqt_plot
+
+```
+
+**2. Tune the Robot Mid-Flight:**
+
+* Safely place the robot on an elevated block so the wheels can spin freely in the air.
+* Use your teleop terminal to send a constant velocity command (e.g., driving straight forward).
+* In `rqt_reconfigure`, select the `jawbot_pid_tuner` node. Use the sliders to dynamically adjust `motor_kp`, `motor_ki`, and `motor_kd`.
+* Watch `rqt_plot` (monitoring the `/joint_states` velocity data) to ensure the actual wheel speed smoothly converges on your target speed without violent oscillations.
+* Finally, place the robot on the floor and slightly increase `motor_ki` to help the robot push through physical ground friction.
+
+**3. Hardcode and Save the Final Values:**
+The `rqt_reconfigure` GUI only overwrites the PID values temporarily in active memory. Once you have found your ideal "Magic Numbers" from the floor test, you must permanently save them to keep the system synchronized on boot:
+
+* **The Pi Pico Firmware (The Master Value):** Open your firmware file (`jawbot_pico.ino`). Update the default PID arguments inside your `RobotJoint` object instantiations to your new magic numbers, then re-flash the Pi Pico via the Arduino IDE.
+* **The C++ ROS 2 Interface (The GUI Default):** Open your hardware interface header file (e.g., `jawbot_hardware_interface.hpp` or `.h`). Update the starting state variables (`current_kp_`, `current_ki_`, `current_kd_`) so the GUI sliders correctly reflect the Pico's default state the next time you open them.
 
 ## 8. License & Acknowledgments
 - **License:** MIT License

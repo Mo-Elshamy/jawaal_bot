@@ -7,7 +7,7 @@ This document outlines the full-stack control architecture for the Jawbot AMR. T
 ## Part 1: Microcontroller Firmware (Raspberry Pi Pico)
 
 ### 1.1 Methodology
-The Pico acts as a real-time execution slave. The architecture uses Object-Oriented C++ principles, abandoning blocking functions (like `delay()`) in favor of hardware-timed interrupts. The methodology relies on a **50Hz Hardware Timer** to execute PID velocity math, paired with **Hardware Interrupt Service Routines (ISRs)** to capture quadrature encoder pulses instantly.
+The Pico acts as a real-time execution slave. The architecture uses Object-Oriented C++ principles, abandoning blocking functions (like `delay()`) in favor of hardware-timed interrupts. The methodology relies on a **50Hz Hardware Timer** to execute PID velocity math, paired with **Hardware Interrupt Service Routines (ISRs)** to capture quadrature encoder pulses instantly. It also includes **Deadband Compensation** ("Anti-Whine" logic) to smoothly start motors at low target velocities by skipping inactive PWM bands.
 
 ### 1.2 Files and Directory
 | File Path | Description |
@@ -24,14 +24,14 @@ The Pico acts as a real-time execution slave. The architecture uses Object-Orien
 | **`L298N`** | `init()`, `setSpeed()` | Configures GPIOs and maps velocity to PWM signals. |
 | **`WheelEncoder`**| `init()`, `handleInterrupt()`, `getTicks()` | Manages quadrature logic via ISRs and safe tick retrieval. |
 | **`PIDController`**| `compute()`, `setGains()` | Executes velocity tracking math and supports live gain tuning. |
-| **`RobotJoint`** | `executeControlLoop()` | Cascades logic: Encoder $\to$ Velocity Calc $\to$ PID $\to$ Motor PWM. |
+| **`RobotJoint`** | `executeControlLoop()` | Cascades logic: Encoder $\to$ Velocity Calc $\to$ PID $\to$ Deadband Skip $\to$ Motor PWM. |
 
 ---
 
 ## Part 2: ROS 2 Control (Hardware Interface Plugin)
 
 ### 2.1 Methodology
-This layer runs on the Linux SBC using the `ros2_control` framework. It acts as a translator between ROS 2 joint state/command interfaces and the low-level serial protocol. It runs as a `SystemInterface` plugin loaded by the `controller_manager`, ensuring the robot's hardware state is synchronized with the URDF model.
+This layer runs on the Linux SBC using the `ros2_control` framework. It acts as a translator between ROS 2 joint state/command interfaces and the low-level serial protocol. It runs as a `SystemInterface` plugin loaded by the `controller_manager`, ensuring the robot's hardware state is synchronized with the URDF model. Additionally, it hosts an embedded parameter node allowing for **Dynamic PID Tuning** mid-flight via `rqt_reconfigure`.
 
 ### 2.2 Files and Directory
 | File Path | Description |
@@ -47,6 +47,7 @@ This layer runs on the Linux SBC using the `ros2_control` framework. It acts as 
 | | `read()` | Ingests serial telemetry and calculates joint velocity via timestamps. |
 | | `write()` | Formats target velocities into string commands for the microcontroller. |
 | | `on_activate()` | Lifecycle hook: Initializes port and performs safety zeroing of motors. |
+| | (Embedded Node) | A background thread (`tune_thread_`) listens for `rqt_reconfigure` parameter updates and syncs them to the Pico. |
 
 ---
 
