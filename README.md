@@ -203,8 +203,7 @@ ros2 run rqt_plot rqt_plot
 **3. Hardcode and Save the Final Values:**
 The `rqt_reconfigure` GUI only overwrites the PID values temporarily in active memory. Once you have found your ideal "Magic Numbers" from the floor test, you must permanently save them to keep the system synchronized on boot:
 
-* **The Pi Pico Firmware (The Master Value):** Open your firmware file (`jawbot_pico.ino`). Update the default PID arguments inside your `RobotJoint` object instantiations to your new magic numbers, then re-flash the Pi Pico via the Arduino IDE.
-* **The C++ ROS 2 Interface (The GUI Default):** Open your hardware interface header file (e.g., `jawbot_hardware_interface.hpp` or `.h`). Update the starting state variables (`current_kp_`, `current_ki_`, `current_kd_`) so the GUI sliders correctly reflect the Pico's default state the next time you open them.
+* **The C++ ROS 2 Interface (The GUI Default):** Open your hardware implementation  file (e.g., `jawbot_hardware_interface.cpp`). Update the starting state variables (`current_kp_`, `current_ki_`, `current_kd_`) so the GUI sliders correctly reflect the Pico's default state the next time you open them.
 
 ## 8. License & Acknowledgments
 - **License:** MIT License
