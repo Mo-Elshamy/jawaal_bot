@@ -16,8 +16,8 @@ jawbot_base_controller:
 
     # --- PHYSICAL ROBOT DIMENSIONS ---
     # You MUST measure these on your physical Jawbot in meters!
-    wheel_separation: 0.25  # Distance between the center of the left and right wheel
-    wheel_radius: 0.035     # Radius of the wheels
+    wheel_separation: 0.17  # Distance between the center of the left and right wheel
+    wheel_radius: 0.04     # Radius of the wheels
 
     # --- KINEMATIC LIMITS ---
     use_stamped_vel: false
