@@ -21,6 +21,47 @@ hardware_interface::CallbackReturn JawbotHardwareInterface::on_init(const hardwa
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
+  // ===============================================================
+  // EMBEDDED DYNAMIC TUNING NODE
+  // ===============================================================
+  tune_node_ = std::make_shared<rclcpp::Node>("jawbot_pid_tuner");
+  
+  // Declare the parameters so rqt_reconfigure can see them
+  tune_node_->declare_parameter("motor_kp", current_kp_);
+  tune_node_->declare_parameter("motor_ki", current_ki_);
+  tune_node_->declare_parameter("motor_kd", current_kd_);
+
+  // Create a callback that fires EVERY TIME you move a slider in the GUI
+  param_cb_ = tune_node_->add_on_set_parameters_callback(
+    [this](const std::vector<rclcpp::Parameter> &parameters) {
+      for (const auto &param : parameters) {
+        if (param.get_name() == "motor_kp") current_kp_ = param.as_double();
+        if (param.get_name() == "motor_ki") current_ki_ = param.as_double();
+        if (param.get_name() == "motor_kd") current_kd_ = param.as_double();
+      }
+
+      // Pack the new values into the Phase 2 'p' string contract
+      char buffer[64];
+      snprintf(buffer, sizeof(buffer), "p %.3f %.3f %.3f\n", current_kp_, current_ki_, current_kd_);
+      
+      // Send it instantly to the Pi Pico
+      if (serial_conn_.is_connected()) {
+        serial_conn_.write_msg(std::string(buffer));
+        RCLCPP_INFO(rclcpp::get_logger("JawbotHardware"), "Sent PID Update: %s", buffer);
+      }
+
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      return result;
+    }
+  );
+
+  // Spin the node on a separate background thread so it doesn't block the real-time loop!
+  tune_thread_ = std::thread([this]() {
+    rclcpp::spin(tune_node_);
+  });
+  // ===============================================================
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 

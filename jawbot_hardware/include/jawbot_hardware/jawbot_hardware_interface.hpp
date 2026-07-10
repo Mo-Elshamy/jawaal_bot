@@ -10,6 +10,7 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include <thread>
 
 // Include your custom serial driver
 #include "jawbot_hardware/serial_comms.hpp"
@@ -50,6 +51,16 @@ private:
   int32_t last_left_ticks_ = 0;
   int32_t last_right_ticks_ = 0;
   uint32_t last_pico_micros_ = 0;
+
+  // Embedded Tuning Node Variables
+  std::shared_ptr<rclcpp::Node> tune_node_;
+  std::thread tune_thread_;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_cb_;
+  
+  // Default PID values
+  double current_kp_ = 5.0;
+  double current_ki_ = 0.5;
+  double current_kd_ = 0.08;
 
   double ticks_per_rad_ = 0.0;
   std::string port_ = "/dev/ttyACM0";
