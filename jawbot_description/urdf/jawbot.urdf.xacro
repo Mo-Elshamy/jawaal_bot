@@ -300,4 +300,25 @@
     <axis xyz="0 0 0" />
   </joint>
 
+  <!-- ============================================================================= -->
+  <!-- IMU SENSOR                                                                    -->
+  <!-- ============================================================================= -->
+<link name="imu_link">
+  <visual>
+    <geometry>
+      <box size="0.02 0.02 0.01"/> <!-- Small box representing the GY-87 -->
+    </geometry>
+    <material name="red">
+      <color rgba="1.0 0.0 0.0 1.0"/>
+    </material>
+  </visual>
+</link>
+
+<!-- IMU Joint: Middle of robot, 6cm (0.06m) high -->
+<joint name="imu_joint" type="fixed">
+  <parent link="base_link"/> <!-- Assuming your main chassis is base_link -->
+  <child link="imu_link"/>
+  <origin xyz="0 0 0.06" rpy="0 0 0"/> 
+</joint>
+
 </robot>

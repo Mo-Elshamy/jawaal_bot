@@ -72,6 +72,23 @@ std::vector<hardware_interface::StateInterface> JawbotHardwareInterface::export_
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_positions_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_velocities_[i]));
   }
+
+  // --- NEW: EXPORT IMU SENSOR STATES ---
+  // The string "imu_sensor" must exactly match the name of the sensor in your URDF!
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "linear_acceleration.x", &hw_imu_accel_[0]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "linear_acceleration.y", &hw_imu_accel_[1]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "linear_acceleration.z", &hw_imu_accel_[2]));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "angular_velocity.x", &hw_imu_gyro_[0]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "angular_velocity.y", &hw_imu_gyro_[1]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "angular_velocity.z", &hw_imu_gyro_[2]));
+
+  // Standard ROS 2 IMU broadcasters don't usually stream raw magnetometer data automatically,
+  // but we export them as custom states so other custom nodes or the EKF can access them if needed.
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "magnetic_field.x", &hw_imu_mag_[0]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "magnetic_field.y", &hw_imu_mag_[1]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "magnetic_field.z", &hw_imu_mag_[2]));
+
   return state_interfaces;
 }
 
@@ -126,19 +143,25 @@ hardware_interface::return_type JawbotHardwareInterface::read(const rclcpp::Time
   std::string response = serial_conn_.read_msg();
   if (response.empty()) return hardware_interface::return_type::OK; // Wait for next cycle
 
-  // Parse Phase 2 Contract: "e <left> <right> t <micros>"
+  // Parse Phase 2 Contract with Optional IMU
   int32_t current_left_ticks = 0, current_right_ticks = 0;
   uint32_t current_pico_micros = 0;
   
-  if (sscanf(response.c_str(), "e %d %d t %u", &current_left_ticks, &current_right_ticks, &current_pico_micros) == 3) 
+  // Temporary variables to hold the IMU floats
+  float ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0, mx = 0, my = 0, mz = 0;
+  
+  // sscanf returns the number of variables it successfully matched and filled
+  int parsed = sscanf(response.c_str(), "e %d %d t %u i %f %f %f %f %f %f %f %f %f", 
+                      &current_left_ticks, &current_right_ticks, &current_pico_micros,
+                      &ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
+  
+  if (parsed >= 3) 
   {
-    // Absolute position in radians
+    // 1. Process Wheel Odometry (Always executes if at least 3 values are parsed)
     hw_positions_[0] = current_left_ticks / ticks_per_rad_;
     hw_positions_[1] = current_right_ticks / ticks_per_rad_;
 
-    // Calculate exact velocity using the Pico's precise internal hardware clock difference
     double delta_time_sec = (current_pico_micros - last_pico_micros_) / 1000000.0;
-    
     if (delta_time_sec > 0) {
       hw_velocities_[0] = ((current_left_ticks - last_left_ticks_) / ticks_per_rad_) / delta_time_sec;
       hw_velocities_[1] = ((current_right_ticks - last_right_ticks_) / ticks_per_rad_) / delta_time_sec;
@@ -147,6 +170,21 @@ hardware_interface::return_type JawbotHardwareInterface::read(const rclcpp::Time
     last_left_ticks_ = current_left_ticks;
     last_right_ticks_ = current_right_ticks;
     last_pico_micros_ = current_pico_micros;
+
+    // 2. Process IMU Data (Executes ONLY if all 12 values are parsed)
+    if (parsed == 12) {
+      hw_imu_accel_[0] = ax;
+      hw_imu_accel_[1] = ay;
+      hw_imu_accel_[2] = az;
+
+      hw_imu_gyro_[0] = gx;
+      hw_imu_gyro_[1] = gy;
+      hw_imu_gyro_[2] = gz;
+
+      hw_imu_mag_[0] = mx;
+      hw_imu_mag_[1] = my;
+      hw_imu_mag_[2] = mz;
+    }
   }
 
   return hardware_interface::return_type::OK;

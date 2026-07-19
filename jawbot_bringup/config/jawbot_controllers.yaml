@@ -9,6 +9,9 @@ controller_manager:
     jawbot_base_controller:
       type: diff_drive_controller/DiffDriveController
 
+    imu_broadcaster:
+      type: imu_sensor_broadcaster/IMUSensorBroadcaster
+
 jawbot_base_controller:
   ros__parameters:
     left_wheel_names: ["left_wheel_joint"]
@@ -35,3 +38,9 @@ jawbot_base_controller:
         max_velocity: 2.0     # rad/s
         has_acceleration_limits: true
         max_acceleration: 2.0 # rad/s^2
+
+
+imu_broadcaster:
+  ros__parameters:
+    sensor_name: "imu_sensor"
+    frame_id: "imu_link"

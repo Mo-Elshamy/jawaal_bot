@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "RobotJoint.h"
+#include "gy87_driver.h" // <-- NEW: Include the IMU structure
 
 class SerialProtocol {
 private:
@@ -21,8 +22,11 @@ public:
     // Reads the serial line and handles parsing if a newline is detected
     void processIncoming();
 
-    // Packages and fires the encoder data upstream
+    // Original telemetry (Wheels only)
     void sendTelemetry(uint32_t time_micros);
+
+    // --- NEW: Overloaded telemetry with IMU data ---
+    void sendTelemetry(uint32_t time_micros, const IMUData& imu_data, bool imu_active);
 
     uint32_t getLastCommandTime() const;
 };

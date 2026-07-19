@@ -65,6 +65,11 @@ private:
   double ticks_per_rad_ = 0.0;
   std::string port_ = "/dev/ttyACM0";
   int baud_rate_ = 115200;
+
+  // ---  IMU VARIABLES ---
+  std::vector<double> hw_imu_accel_ = {0.0, 0.0, 0.0};
+  std::vector<double> hw_imu_gyro_ = {0.0, 0.0, 0.0};
+  std::vector<double> hw_imu_mag_ = {0.0, 0.0, 0.0};
 };
 
 }  // namespace jawbot_hardware

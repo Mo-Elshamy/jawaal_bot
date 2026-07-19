@@ -4,12 +4,22 @@
 #include "RobotJoint.h"
 #include "SerialProtocol.h"
 
+// --- NEW: IMU DRIVER ---
+#include "gy87_driver.h"
+#define USE_IMU  // Comment this line out to completely disable the IMU
+
+#ifdef USE_IMU
+    GY87 imu;
+    IMUData imuData;
+    bool imu_active = false;
+#endif
+
 // --- 1. HARDWARE MAPPING ---
 L298N left_motor(6, 7, 13);
 WheelEncoder left_enc(3, 2); 
 
 L298N right_motor(12, 10, 11);
-WheelEncoder right_enc(4, 5);
+WheelEncoder right_enc(4, 5); // This confirms why we couldn't use GP4/5 for I2C!
 
 // --- 2. INTERRUPT ROUTINES ---
 void left_isr() { left_enc.handleInterrupt(); }
@@ -47,6 +57,16 @@ void setup() {
     left_joint.init();
     right_joint.init();
 
+    // --- NEW: INITIALIZE IMU ---
+    #ifdef USE_IMU
+        if (imu.init()) {
+            imu_active = true;
+        } else {
+            // Fails safely. If wiring breaks, the motors will still run!
+            imu_active = false; 
+        }
+    #endif
+
     attachInterrupt(digitalPinToInterrupt(3), left_isr, CHANGE); 
     attachInterrupt(digitalPinToInterrupt(4), right_isr, CHANGE);
 
@@ -58,10 +78,25 @@ void loop() {
     if (run_control_cycle) {
         run_control_cycle = false;
         
+        // Execute Motor PID
         left_joint.executeControlLoop(LOOP_DT, TICKS_PER_RAD);
         right_joint.executeControlLoop(LOOP_DT, TICKS_PER_RAD);
 
-        ros2_comms.sendTelemetry(micros());
+        // --- NEW: READ IMU ---
+        #ifdef USE_IMU
+            if (imu_active) {
+                imu.update(imuData); // Pull fresh 50Hz data from the sensors
+            }
+        #endif
+
+        // --- UPDATE REQUIRED HERE ---
+        // You will need to modify your sendTelemetry function in SerialProtocol.h 
+        // to accept the new imuData object so it can send it to the Pi.
+        #ifdef USE_IMU
+            ros2_comms.sendTelemetry(micros(), imuData, imu_active);
+        #else
+            ros2_comms.sendTelemetry(micros());
+        #endif
     }
 
     // 2. BACKGROUND COMMUNICATION LAYER

@@ -38,6 +38,9 @@ void SerialProtocol::parseCommand(String command) {
     }
 }
 
+// ---------------------------------------------------------
+// Original Telemetry Method (Used when USE_IMU is disabled)
+// ---------------------------------------------------------
 void SerialProtocol::sendTelemetry(uint32_t time_micros) {
     Serial.print("e ");
     Serial.print(left_joint_.readAbsoluteTicks());
@@ -46,6 +49,41 @@ void SerialProtocol::sendTelemetry(uint32_t time_micros) {
     Serial.print(" t ");
     Serial.print(time_micros);
     Serial.print("\n");
+}
+
+// ---------------------------------------------------------
+// New Telemetry Method (Used when USE_IMU is enabled)
+// ---------------------------------------------------------
+void SerialProtocol::sendTelemetry(uint32_t time_micros, const IMUData& imu_data, bool imu_active) {
+    // 1. Send the standard wheel and time data
+    Serial.print("e ");
+    Serial.print(left_joint_.readAbsoluteTicks());
+    Serial.print(" ");
+    Serial.print(right_joint_.readAbsoluteTicks());
+    Serial.print(" t ");
+    Serial.print(time_micros);
+    
+    // 2. Append IMU data if the hardware is connected and active
+    if (imu_active) {
+        Serial.print(" i ");
+        // Accel (4 decimals)
+        Serial.print(imu_data.accel_x, 4); Serial.print(" ");
+        Serial.print(imu_data.accel_y, 4); Serial.print(" ");
+        Serial.print(imu_data.accel_z, 4); Serial.print(" ");
+        
+        // Gyro (4 decimals)
+        Serial.print(imu_data.gyro_x, 4); Serial.print(" ");
+        Serial.print(imu_data.gyro_y, 4); Serial.print(" ");
+        Serial.print(imu_data.gyro_z, 4); Serial.print(" ");
+        
+        // Mag (6 decimals due to tiny Tesla values)
+        Serial.print(imu_data.mag_x, 6); Serial.print(" ");
+        Serial.print(imu_data.mag_y, 6); Serial.print(" ");
+        Serial.print(imu_data.mag_z, 6); 
+    }
+    
+    // 3. Cap off the message with the newline character
+    Serial.print("\n"); 
 }
 
 uint32_t SerialProtocol::getLastCommandTime() const {
