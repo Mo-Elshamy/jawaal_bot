@@ -211,3 +211,4 @@ The `rqt_reconfigure` GUI only overwrites the PID values temporarily in active m
 
 Notes:
 1- the ticks per revolution of the motor is 988 and need to be configured in both jawbot_ros2_control.urdf.xacro and jawbot_pico.ino files
+2- the pid params must be set in the jawbot_hardware_cpp and jaw.ino file
