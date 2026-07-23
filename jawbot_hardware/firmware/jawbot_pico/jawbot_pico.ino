@@ -26,7 +26,7 @@ void left_isr() { left_enc.handleInterrupt(); }
 void right_isr() { right_enc.handleInterrupt(); }
 
 // --- 3. SYSTEM CONSTANTS ---
-const float TICKS_PER_REV = 1440.0f;
+const float TICKS_PER_REV = 988.0f;
 const float TICKS_PER_RAD = TICKS_PER_REV / (2.0f * PI);
 const float LOOP_HZ = 50.0f;
 const float LOOP_DT = 1.0f / LOOP_HZ;

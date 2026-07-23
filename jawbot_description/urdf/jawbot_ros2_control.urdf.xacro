@@ -9,7 +9,7 @@
       
       <param name="port">$(arg serial_port)</param>
       <param name="baud_rate">115200</param>
-      <param name="ticks_per_rev">1440.0</param> 
+      <param name="ticks_per_rev">988.0</param> 
     </hardware>
 
     <joint name="left_wheel_joint">

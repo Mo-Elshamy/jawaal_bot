@@ -208,3 +208,6 @@ The `rqt_reconfigure` GUI only overwrites the PID values temporarily in active m
 ## 8. License & Acknowledgments
 - **License:** MIT License
 - Designed and built as a modular AMR platform.
+
+Notes:
+1- the ticks per revolution of the motor is 988 and need to be configured in both jawbot_ros2_control.urdf.xacro and jawbot_pico.ino files
