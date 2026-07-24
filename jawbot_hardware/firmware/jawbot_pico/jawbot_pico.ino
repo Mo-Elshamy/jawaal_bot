@@ -35,8 +35,8 @@ const int STATUS_LED = LED_BUILTIN;
 const uint32_t WATCHDOG_TIMEOUT_MS = 1000;
 
 // --- 4. OBJECT INSTANTIATIONS ---
-RobotJoint left_joint(left_motor, left_enc, PIDController(5.0, 0.025, 0.02, -100.0, 100.0));
-RobotJoint right_joint(right_motor, right_enc, PIDController(5.0, 0.025, 0.02, -100.0, 100.0));
+RobotJoint left_joint(left_motor, left_enc, PIDController(5.0, 0.055, 0.03, -100.0, 100.0));
+RobotJoint right_joint(right_motor, right_enc, PIDController(5.0, 0.055, 0.03, -100.0, 100.0));
 SerialProtocol ros2_comms(left_joint, right_joint);
 
 // --- 5. TIMER SETUP ---

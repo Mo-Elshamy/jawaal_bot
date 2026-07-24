@@ -59,8 +59,8 @@ private:
   
   // Default PID values
   double current_kp_ = 5.0;
-  double current_ki_ = 0.025;
-  double current_kd_ = 0.02;
+  double current_ki_ = 0.055;
+  double current_kd_ = 0.03;
 
   double ticks_per_rad_ = 0.0;
   std::string port_ = "/dev/ttyACM0";

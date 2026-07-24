@@ -4,6 +4,8 @@ Accurate sensor readings and odometry are the foundation of the entire ROS 2 Nav
 
 This guide outlines the standard operating procedures for calibrating both the **Differential Drive Odometry** and the **GY-87 IMU (MPU6050/HMC5883L)**.
 
+> 💡 **Looking for EKF filter tuning?** Refer to the **[EKF Tuning & Troubleshooting Guide](jawbot_localization/EKF_CALIBRATION.md)** for process noise ($Q$), measurement noise ($R$), and outlier rejection threshold tuning.
+
 ---
 
 ## 📋 Table of Contents
