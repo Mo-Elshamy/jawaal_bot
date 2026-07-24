@@ -73,7 +73,7 @@ std::vector<hardware_interface::StateInterface> JawbotHardwareInterface::export_
     state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_velocities_[i]));
   }
 
-  // --- NEW: EXPORT IMU SENSOR STATES ---
+  // --- EXPORT IMU SENSOR STATES ---
   // The string "imu_sensor" must exactly match the name of the sensor in your URDF!
   state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "linear_acceleration.x", &hw_imu_accel_[0]));
   state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "linear_acceleration.y", &hw_imu_accel_[1]));
@@ -82,6 +82,11 @@ std::vector<hardware_interface::StateInterface> JawbotHardwareInterface::export_
   state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "angular_velocity.x", &hw_imu_gyro_[0]));
   state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "angular_velocity.y", &hw_imu_gyro_[1]));
   state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "angular_velocity.z", &hw_imu_gyro_[2]));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "orientation.x", &hw_imu_quat_[0]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "orientation.y", &hw_imu_quat_[1]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "orientation.z", &hw_imu_quat_[2]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("imu_sensor", "orientation.w", &hw_imu_quat_[3]));
 
   // Standard ROS 2 IMU broadcasters don't usually stream raw magnetometer data automatically,
   // but we export them as custom states so other custom nodes or the EKF can access them if needed.

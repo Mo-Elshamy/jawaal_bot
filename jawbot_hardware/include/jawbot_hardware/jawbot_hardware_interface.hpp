@@ -70,6 +70,9 @@ private:
   std::vector<double> hw_imu_accel_ = {0.0, 0.0, 0.0};
   std::vector<double> hw_imu_gyro_ = {0.0, 0.0, 0.0};
   std::vector<double> hw_imu_mag_ = {0.0, 0.0, 0.0};
+  
+  // Dummy orientation to satisfy ros2_control (1.0 is the neutral 'w' quaternion)
+  std::vector<double> hw_imu_quat_ = {0.0, 0.0, 0.0, 1.0};
 };
 
 }  // namespace jawbot_hardware
