@@ -1,28 +1,28 @@
 ekf_filter_node:
   ros__parameters:
     frequency: 30.0
-    two_d_mode: true              # Forces Roll, Pitch, Z to 0 for a flat floor robot
-    publish_tf: true              # Publishes the odom -> base_link transform
+    two_d_mode: true              # Constrains movement to flat 2D floor (suppresses Z, Roll, Pitch)
+    publish_tf: true              # Broadcasts dynamic odom -> base_footprint TF
 
     map_frame: map
     odom_frame: odom
-    base_link_frame: base_link
+    base_link_frame: base_footprint
     world_frame: odom
 
     # --- Sensor 1: Wheel Odometry ---
-    odom0: /wheel_odom
-    odom0_config: [false, false, false,   # Position x, y, z
-                   false, false, false,   # Orientation roll, pitch, yaw
-                   true,  false, false,   # Linear velocity vx, vy, vz
-                   false, false, true,    # Angular velocity vroll, vpitch, vyaw
-                   false, false, false]   # Acceleration ax, ay, az
+    odom0: /jawbot_base_controller/odom
+    odom0_config: [false, false, false,   # x, y, z positions
+                   false, false, false,   # roll, pitch, yaw orientation
+                   true,  false, false,   # vx (trust forward linear velocity)
+                   false, false, true,    # vyaw (trust wheel turning rate)
+                   false, false, false]   # ax, ay, az acceleration
     odom0_differential: false
 
-    # --- Sensor 2: Raw GY-87 IMU ---
-    imu0: /imu/data_raw
-    imu0_config: [false, false, false,   # Position x, y, z
-                  false, false, true,    # Orientation roll, pitch, yaw
-                  false, false, false,   # Linear velocity vx, vy, vz
-                  false, false, true,    # Angular velocity vroll, vpitch, vyaw
-                  true,  false, false]   # Acceleration ax, ay, az
+    # --- Sensor 2: GY-87 IMU ---
+    imu0: /imu_broadcaster/imu
+    imu0_config: [false, false, false,   # x, y, z positions
+                  false, false, false,   # roll, pitch, yaw (false because covariance[0] = -1.0)
+                  false, false, false,   # vx, vy, vz velocities
+                  false, false, true,    # vyaw (trust z-gyro angular rate)
+                  true,  false, false]   # ax (trust x-axis linear acceleration)
     imu0_differential: false
