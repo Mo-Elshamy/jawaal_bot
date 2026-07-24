@@ -45,10 +45,14 @@ imu_broadcaster:
     sensor_name: "imu_sensor"
     frame_id: "imu_link"
 
-    # Tell the broadcaster to ignore the missing orientation data
-    static_covariance_orientation: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    
-    # Define default covariances for your raw data
-    # (These numbers represent the 'noise' level. 0.001 is a safe starting point)
+    interfaces:
+      - linear_acceleration.x
+      - linear_acceleration.y
+      - linear_acceleration.z
+      - angular_velocity.x
+      - angular_velocity.y
+      - angular_velocity.z
+
+    # Provide safe default covariance values so the EKF knows the sensor noise level
     static_covariance_angular_velocity: [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001]
     static_covariance_linear_acceleration: [0.001, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.001]
