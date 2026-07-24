@@ -47,13 +47,15 @@ bool GY87::update(IMUData &data) {
         int16_t gy = Wire.read() << 8 | Wire.read();
         int16_t gz = Wire.read() << 8 | Wire.read();
 
-        // Convert to ROS standard units
-        data.accel_x = ax * ACCEL_SCALE;
-        data.accel_y = ay * ACCEL_SCALE;
-        data.accel_z = az * ACCEL_SCALE;
-        data.gyro_x = gx * GYRO_SCALE;
-        data.gyro_y = gy * GYRO_SCALE;
-        data.gyro_z = gz * GYRO_SCALE;
+        // Convert to ROS standard units AND apply calibration offsets
+        data.accel_x = (ax * ACCEL_SCALE) - offset_accel_x;
+        data.accel_y = (ay * ACCEL_SCALE) - offset_accel_y;
+        data.accel_z = (az * ACCEL_SCALE) - offset_accel_z;
+        
+        data.gyro_x = (gx * GYRO_SCALE) - offset_gyro_x;
+        data.gyro_y = (gy * GYRO_SCALE) - offset_gyro_y;
+        data.gyro_z = (gz * GYRO_SCALE) - offset_gyro_z;
+        
     } else {
         return false;
     }

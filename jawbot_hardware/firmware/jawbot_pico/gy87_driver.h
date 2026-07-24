@@ -30,6 +30,13 @@ private:
     const float ACCEL_SCALE = 9.80665 / 16384.0;
     const float GYRO_SCALE = 0.0174533 / 131.0;
     const float MAG_SCALE = 0.0000001; 
+
+    const float offset_accel_x = -0.46396;
+    const float offset_accel_y = -0.24761;
+    const float offset_accel_z = -0.33175;
+    const float offset_gyro_x = 0.06721;
+    const float offset_gyro_y = 0.02300;
+    const float offset_gyro_z = 0.01733;
 };
 
 #endif

@@ -72,6 +72,13 @@ def generate_launch_description():
         arguments=['jawbot_base_controller', '--controller-manager', '/controller_manager'],
     )
 
+    # Spawner for the IMU broadcaster
+    spawn_imu = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['imu_broadcaster', '--controller-manager', '/controller_manager'],
+    )
+
     # --- 7. Orchestrate Startup Sequence ---
     # Delay spawning controllers until the controller_manager is fully up and running
     delay_jsb_after_manager = RegisterEventHandler(
@@ -88,11 +95,19 @@ def generate_launch_description():
         )
     )
 
+    delay_imu_after_manager = RegisterEventHandler(
+        event_handler=OnProcessStart(
+            target_action=node_controller_manager,
+            on_start=[spawn_imu],
+        )
+    )
+
     return LaunchDescription([
         serial_port_arg,
         node_robot_state_publisher,
         node_controller_manager,
         node_twist_stamper,
         delay_jsb_after_manager,
-        delay_ddc_after_manager
+        delay_ddc_after_manager,
+        delay_imu_after_manager
     ])
