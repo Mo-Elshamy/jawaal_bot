@@ -72,7 +72,7 @@ def generate_launch_description():
         arguments=['jawbot_base_controller', '--controller-manager', '/controller_manager'],
     )
 
-    # Spawner for the IMU broadcaster
+    # Spawner for the IMU broadcaster (Translates IMU C++ state to ROS 2 Topics)
     spawn_imu = Node(
         package='controller_manager',
         executable='spawner',
