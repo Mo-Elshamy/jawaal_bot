@@ -189,8 +189,8 @@ On your local development laptop, run the dynamic parameter GUI and the real-tim
 # Terminal 1: Open the parameter sliders
 ros2 run rqt_reconfigure rqt_reconfigure
 
-# Terminal 2: Open the velocity plotter
-ros2 run rqt_plot rqt_plot
+# Terminal 2: Open the velocity plotter pre-loaded with left/right wheel velocity topics
+ros2 run rqt_plot rqt_plot /joint_states/velocity[0] /joint_states/velocity[1]
 
 ```
 
@@ -200,6 +200,15 @@ ros2 run rqt_plot rqt_plot
 * Use your teleop terminal to send a constant velocity command (e.g., driving straight forward).
 * In `rqt_reconfigure`, select the `jawbot_pid_tuner` node. Use the sliders to dynamically adjust `motor_kp`, `motor_ki`, and `motor_kd`.
 * Watch `rqt_plot` (monitoring the `/joint_states` velocity data) to ensure the actual wheel speed smoothly converges on your target speed without violent oscillations.
+
+> ⚠️ **Common Pitfall — Plotting Array Fields in `rqt_plot`:**  
+> Unlike RViz, `rqt_plot` cannot plot entire ROS message structs; it requires single numerical variables (floats/integers). Typing `/joint_states` into the Topic bar will show nothing because it is a complex message containing arrays.  
+>  
+> **The Fix:** In the `rqt_plot` text bar, type the exact numeric field index and click the green **`+`** button:  
+> - **Left Wheel Velocity:** `/joint_states/velocity[0]`  
+> - **Right Wheel Velocity:** `/joint_states/velocity[1]`  
+> - **Alternative (Odom Linear Speed):** `/jawbot_base_controller/odom/twist/twist/linear/x`
+
 * Finally, place the robot on the floor and slightly increase `motor_ki` to help the robot push through physical ground friction.
 
 **3. Hardcode and Save the Final Values:**
