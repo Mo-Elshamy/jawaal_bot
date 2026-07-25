@@ -1,7 +1,9 @@
 import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
 from launch.event_handlers import OnProcessStart
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -11,8 +13,9 @@ def generate_launch_description():
     # --- 1. Define Package Paths ---
     pkg_description = FindPackageShare('jawbot_description')
     pkg_bringup = FindPackageShare('jawbot_bringup')
+    hw_share = get_package_share_directory('jawbot_hardware')
 
-    # --- 2. Declare Dynamic Arguments (Level 2 Architecture) ---
+    # --- 2. Declare Dynamic Arguments ---
     serial_port_arg = DeclareLaunchArgument(
         'port',
         default_value='/dev/ttyACM0',
@@ -20,7 +23,7 @@ def generate_launch_description():
     )
 
     # --- 3. Process the URDF / Xacro ---
-    # This command explicitly injects your terminal argument into the URDF!
+    # Injects assigned serial port into URDF xacro processing
     xacro_file = PathJoinSubstitution([pkg_description, 'urdf', 'jawbot.urdf.xacro'])
     robot_description_content = Command([
         'xacro ', xacro_file, ' serial_port:=', LaunchConfiguration('port')
@@ -40,7 +43,7 @@ def generate_launch_description():
         parameters=[robot_description]
     )
 
-    # --- 6. Node to fix timestamp issue ---
+    # Node to fix velocity timestamp issues
     node_twist_stamper = Node(
         package='twist_stamper',
         executable='twist_stamper',
@@ -79,6 +82,13 @@ def generate_launch_description():
         arguments=['imu_broadcaster', '--controller-manager', '/controller_manager'],
     )
 
+    # --- 6. RPLiDAR Driver Launch ---
+    rplidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(hw_share, 'launch', 'rplidar.launch.py')
+        )
+    )
+
     # --- 7. Orchestrate Startup Sequence ---
     # Delay spawning controllers until the controller_manager is fully up and running
     delay_jsb_after_manager = RegisterEventHandler(
@@ -107,6 +117,7 @@ def generate_launch_description():
         node_robot_state_publisher,
         node_controller_manager,
         node_twist_stamper,
+        rplidar_launch,
         delay_jsb_after_manager,
         delay_ddc_after_manager,
         delay_imu_after_manager
