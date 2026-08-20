@@ -1,6 +1,6 @@
 ekf_filter_node:
   ros__parameters:
-    frequency: 10.0
+    frequency: 50.0
     two_d_mode: true              # Constrains movement to flat 2D floor (suppresses Z, Roll, Pitch)
     publish_tf: true              # Broadcasts dynamic odom -> base_footprint TF
 

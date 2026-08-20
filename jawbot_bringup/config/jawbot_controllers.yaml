@@ -21,7 +21,8 @@ jawbot_base_controller:
     # You MUST measure these on your physical Jawbot in meters!
     wheel_separation: 0.17  # Distance between the center of the left and right wheel
     wheel_radius: 0.04     # Radius of the wheels
-
+    enable_odom_tf: false
+    
     # --- KINEMATIC LIMITS ---
     use_stamped_vel: false
     base_frame_id: base_footprint
