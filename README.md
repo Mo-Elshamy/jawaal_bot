@@ -11,14 +11,16 @@ Jawbot is a custom-built Autonomous Mobile Robot (AMR) designed around a differe
 - **Diff-Drive Kinematics:** Fully supported by the ROS 2 `diff_drive_controller` and `joint_state_broadcaster`.
 - **Custom Hardware Interface:** Uses a custom `ros2_control` `SystemInterface` to communicate seamlessly with the microcontroller.
 - **Real-Time Closed-Loop Control:** PID velocity tracking executed deterministically on the Raspberry Pi Pico at 50Hz.
+- **RPLiDAR A1 Integration:** Dedicated ROS 2 node setup for real-time 2D laser scan publishing (`/scan`).
+- **2D SLAM & Mapping:** Parameterized `slam_toolbox` configuration for online asynchronous mapping and map saving.
 - **Simulation Ready:** Full integration with Gazebo (Harmonic) for physics simulation and testing prior to hardware deployment.
-- **Modular Architecture:** Packages are neatly decoupled, isolating hardware drivers from kinematics and visualization.
+- **Modular Architecture:** Packages are neatly decoupled, isolating hardware drivers from kinematics, localization, and navigation.
 
 ## 3. System Architecture Stack
 Jawbot operates on a decoupled, full-stack architecture:
 
-- **Hardware Layer:** Raspberry Pi Pico (Main MCU), L298N Motor Drivers, and Quadrature Encoders. Handles real-time motor control and interrupt-driven sensor tracking.
-- **Software Layer:** Runs on Ubuntu 24.04 with ROS 2 Jazzy. Manages high-level velocity commands (`cmd_vel`), TF trees, and state publishing.
+- **Hardware Layer:** Raspberry Pi Pico (Main MCU), L298N Motor Drivers, Quadrature Encoders, and RPLiDAR A1 M8. Handles real-time motor control, interrupt-driven sensor tracking, and 2D laser range scanning.
+- **Software Layer:** Runs on Ubuntu 24.04 with ROS 2 Jazzy. Manages high-level velocity commands (`cmd_vel`), TF trees, state publishing, EKF sensor fusion (50Hz), and `slam_toolbox` mapping.
 - **Control Bridge:** A robust, non-blocking ASCII Serial Protocol over `/dev/ttyACM0` connecting the Linux environment to the hardware.
 
 *For a detailed deep-dive into the control architecture, firmware design, and serial protocol, please see the [Control Architecture Documentation](jawbot_hardware/Control_Arc.md).*
@@ -28,11 +30,11 @@ Jawbot operates on a decoupled, full-stack architecture:
 The project is divided into several focused ROS 2 packages:
 
 - **`jawbot_description`**: Contains the URDF, Xacro macros, and 3D meshes defining the robot's physical properties.
-- **`jawbot_hardware`**: The core C++ `ros2_control` hardware plugin and Linux serial communication drivers.
+- **`jawbot_hardware`**: The core C++ `ros2_control` hardware plugin, Linux serial communication drivers, and RPLiDAR launch configuration.
 - **`jawbot_gazebo`**: Launch files and world definitions for Gazebo simulation.
 - **`jawbot_bringup`**: Orchestrates the launch sequences, starting the robot state publisher, controller manager, and spawning controllers.
-- **`jawbot_localization`**: Extended Kalman Filter (EKF) state estimation fusing raw IMU data and wheel odometry.
-- **`jawbot_navigation`**: Configuration files for the ROS 2 Nav2 stack, including costmaps and SLAM parameters.
+- **`jawbot_localization`**: Extended Kalman Filter (EKF) state estimation fusing raw IMU data and wheel odometry at 50Hz.
+- **`jawbot_navigation`**: Configuration files for ROS 2 Nav2 and 2D SLAM mapping (`slam_toolbox` params, launch scripts, and saved maps).
 
 ## 5. Prerequisites & Dependencies
 - **OS:** Ubuntu 24.04 LTS
@@ -43,6 +45,9 @@ The project is divided into several focused ROS 2 packages:
   - `robot_state_publisher`
   - `xacro`
   - `gazebo_ros_pkgs`
+  - `robot_localization`
+  - `rplidar_ros`
+  - `slam_toolbox`
   - `nav2`
 
 ### Hardware Requirements
@@ -220,6 +225,39 @@ The `rqt_reconfigure` GUI only overwrites the PID values temporarily in active m
 
 Before deploying high-level navigation stacks (Nav2 / SLAM), ensure your robot's physical kinematics and IMU sensors are properly calibrated to eliminate drift:
 * Follow the **[Sensor & Odometry Calibration Guide](SENSOR_CALIBRATION.md)** for step-by-step instructions on calibrating encoder ticks per revolution, effective wheel radius, track width, and GY-87 accelerometer/gyroscope zero-offsets.
+
+---
+
+### Step 9: 2D SLAM Mapping & Map Saving
+
+Jawbot uses `slam_toolbox` in online asynchronous mapping mode coupled with RPLiDAR scan data for high-quality 2D occupancy grid mapping.
+
+#### 1. Launch Hardware Bringup & RPLiDAR
+On the robot (or in bringup launch sequence), ensure the real hardware driver and RPLiDAR node are running:
+```bash
+# Launch master hardware bringup (which launches real hardware interface + RPLiDAR)
+ros2 launch jawbot_bringup real_bringup.launch.py
+```
+
+#### 2. Launch SLAM Toolbox
+Start the SLAM node with the custom `slam_toolbox_params.yaml` configuration:
+```bash
+ros2 launch jawbot_navigation slam.launch.py
+```
+
+#### 3. Teleoperate and Build Map
+Drive the robot around the room using keyboard teleop to cover all areas:
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+#### 4. Save the Generated Map
+Once the occupancy grid map is complete, save the map files (`.pgm` image and `.yaml` metadata) to `jawbot_navigation/maps/`:
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/robot_ws/src/jawaal_bot/jawbot_navigation/maps/my_room_1
+```
+
+---
 
 ## 8. License & Acknowledgments
 - **License:** MIT License
