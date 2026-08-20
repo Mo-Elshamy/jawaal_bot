@@ -81,5 +81,5 @@ def generate_launch_description():
         publish_joints_arg,
         robot_state_publisher,
         joint_state_publisher_node,
-        rviz_node
+        # rviz_node
     ])
