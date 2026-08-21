@@ -10,31 +10,33 @@ Jawbot is a custom-built Autonomous Mobile Robot (AMR) designed around a differe
 ## 2. Key Features
 - **Diff-Drive Kinematics:** Fully supported by the ROS 2 `diff_drive_controller` and `joint_state_broadcaster`.
 - **Custom Hardware Interface:** Uses a custom `ros2_control` `SystemInterface` to communicate seamlessly with the microcontroller.
-- **Real-Time Closed-Loop Control:** PID velocity tracking executed deterministically on the Raspberry Pi Pico at 50Hz.
+- **Real-Time Closed-Loop Control:** Dual-stage friction compensation (breakaway kick & kinetic assist) and PID velocity tracking executed deterministically on the Raspberry Pi Pico at 50Hz.
 - **RPLiDAR A1 Integration:** Dedicated ROS 2 node setup for real-time 2D laser scan publishing (`/scan`).
-- **2D SLAM & Mapping:** Parameterized `slam_toolbox` configuration for online asynchronous mapping and map saving.
+- **2D SLAM & Map Localization:** Parameterized `slam_toolbox` mapping and `AMCL` particle filter localization for precise map-based pose estimation.
+- **Nav2 Autonomous Navigation:** Full integration with ROS 2 Nav2 stack featuring Regulated Pure Pursuit, local/global costmaps, velocity smoother, and collision monitor.
 - **Simulation Ready:** Full integration with Gazebo (Harmonic) for physics simulation and testing prior to hardware deployment.
 - **Modular Architecture:** Packages are neatly decoupled, isolating hardware drivers from kinematics, localization, and navigation.
 
 ## 3. System Architecture Stack
 Jawbot operates on a decoupled, full-stack architecture:
 
-- **Hardware Layer:** Raspberry Pi Pico (Main MCU), L298N Motor Drivers, Quadrature Encoders, and RPLiDAR A1 M8. Handles real-time motor control, interrupt-driven sensor tracking, and 2D laser range scanning.
-- **Software Layer:** Runs on Ubuntu 24.04 with ROS 2 Jazzy. Manages high-level velocity commands (`cmd_vel`), TF trees, state publishing, EKF sensor fusion (50Hz), and `slam_toolbox` mapping.
+- **Hardware Layer:** Raspberry Pi Pico (Main MCU), L298N Motor Drivers, Quadrature Encoders, and RPLiDAR A1 M8. Handles real-time dual-stage friction compensation, interrupt-driven sensor tracking, and 2D laser range scanning.
+- **Software Layer:** Runs on Ubuntu 24.04 with ROS 2 Jazzy. Manages high-level velocity commands (`cmd_vel`), TF trees, state publishing, EKF sensor fusion (50Hz), AMCL localization, `slam_toolbox` mapping, and Nav2 path execution (`velocity_smoother` & `collision_monitor`).
 - **Control Bridge:** A robust, non-blocking ASCII Serial Protocol over `/dev/ttyACM0` connecting the Linux environment to the hardware.
 
-*For a detailed deep-dive into the control architecture, firmware design, and serial protocol, please see the [Control Architecture Documentation](jawbot_hardware/Control_Arc.md).*
+*For a detailed deep-dive into the control architecture, firmware design, dual-stage friction compensation, and serial protocol, please see the [Control Architecture Documentation](jawbot_hardware/Control_Arc.md).*
 *For step-by-step procedures on calibrating odometry (wheel radius, track width, encoder ticks) and IMU offsets (GY-87), please see the [Sensor & Odometry Calibration Guide](SENSOR_CALIBRATION.md).*
+*For tuning guidelines, parameter definitions, and troubleshooting common navigation behaviors, please see the [Nav2 Calibration Guide](NAV2_CALIBRATION.md).*
 
 ## 4. Repository Structure
 The project is divided into several focused ROS 2 packages:
 
 - **`jawbot_description`**: Contains the URDF, Xacro macros, and 3D meshes defining the robot's physical properties.
-- **`jawbot_hardware`**: The core C++ `ros2_control` hardware plugin, Linux serial communication drivers, and RPLiDAR launch configuration.
+- **`jawbot_hardware`**: The core C++ `ros2_control` hardware plugin, Linux serial communication drivers, firmware (`RobotJoint` dual-stage friction logic), and RPLiDAR launch configuration.
 - **`jawbot_gazebo`**: Launch files and world definitions for Gazebo simulation.
 - **`jawbot_bringup`**: Orchestrates the launch sequences, starting the robot state publisher, controller manager, and spawning controllers.
-- **`jawbot_localization`**: Extended Kalman Filter (EKF) state estimation fusing raw IMU data and wheel odometry at 50Hz.
-- **`jawbot_navigation`**: Configuration files for ROS 2 Nav2 and 2D SLAM mapping (`slam_toolbox` params, launch scripts, and saved maps).
+- **`jawbot_localization`**: Extended Kalman Filter (EKF) state estimation fusing raw IMU data and wheel odometry at 50Hz, plus standalone AMCL launch configurations.
+- **`jawbot_navigation`**: Configuration files for ROS 2 Nav2, AMCL parameters, `slam_toolbox` params, navigation launch scripts, and saved maps.
 
 ## 5. Prerequisites & Dependencies
 - **OS:** Ubuntu 24.04 LTS
@@ -48,7 +50,10 @@ The project is divided into several focused ROS 2 packages:
   - `robot_localization`
   - `rplidar_ros`
   - `slam_toolbox`
-  - `nav2`
+  - `nav2_bringup`
+  - `nav2_amcl`
+  - `nav2_map_server`
+  - `nav2_lifecycle_manager`
 
 ### Hardware Requirements
 - Host computer / SBC running Linux
@@ -256,6 +261,30 @@ Once the occupancy grid map is complete, save the map files (`.pgm` image and `.
 ```bash
 ros2 run nav2_map_server map_saver_cli -f ~/robot_ws/src/jawaal_bot/jawbot_navigation/maps/my_room_1
 ```
+
+---
+
+### Step 10: Map-Based Localization (AMCL)
+
+Once a map is generated, launch Adaptive Monte Carlo Localization (AMCL) and the map server to localize the robot on the saved map:
+
+```bash
+# Launch map_server, amcl, and localization lifecycle manager
+ros2 launch jawbot_navigation localization.launch.py map:=src/jawaal_bot/jawbot_navigation/maps/my_room_1.yaml
+```
+
+---
+
+### Step 11: Nav2 Autonomous Navigation
+
+To execute full autonomous waypoint tracking and dynamic obstacle avoidance with safety monitoring:
+
+```bash
+# 1. Bring up full Nav2 stack (Planner, Controller, Recoveries, Velocity Smoother, Collision Monitor)
+ros2 launch jawbot_navigation navigation.launch.py map:=src/jawaal_bot/jawbot_navigation/maps/my_room_1.yaml
+```
+
+*For an in-depth parameter guide and calibration manual for Nav2 controller server, costmaps, and collision monitor tuning, refer to the **[Nav2 Calibration Guide](NAV2_CALIBRATION.md)**.*
 
 ---
 
